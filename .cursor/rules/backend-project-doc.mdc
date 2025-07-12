@@ -1,0 +1,133 @@
+---
+description: 后端接入说明
+globs:
+alwaysApply: false
+---
+
+# LedDeviceCloudPlatform 后端集成指南
+
+## 后端架构概述
+
+LedDeviceCloudPlatform是一个基于微服务架构的LED设备云控制平台，主要包含以下服务：
+
+- **Auth-Server**: 认证服务器，基于OAuth2+OIDC标准
+- **Gateway**: 网关服务，作为OAuth2客户端和API网关
+- **Core-Service**: 核心业务服务，提供设备管理功能
+
+## 前端集成要点
+
+### 认证流程
+
+1. 前端不直接处理token，由Gateway负责
+2. 登录时重定向到`http://localhost:8082/login`,由Gateway来完成整个OAuth2认证流程
+3. 认证成功后，Gateway将token写入Cookie
+4. 所有API请求需设置`withCredentials: true`确保发送Cookie
+
+### 测试账号
+
+用户名：GoogleManager
+组织后缀：12462
+密码：rofN%UF$4y
+
+### API调用规范
+
+1. 所有API请求通过Gateway网关：`http://localhost:8082/core/api/*`
+   （注：core-service前缀: core）
+2. API响应遵循统一格式：
+   ```json
+   {
+     "code": 200,
+     "message": "success",
+     "data": { ... }
+   }
+   ```
+3. 错误处理：监听401状态码处理未授权情况
+
+### 用户信息获取
+
+1. 获取当前用户信息：`GET /api/user/current`
+2. 用户信息包含：
+   ```json
+   {
+     "id": "用户ID",
+     "username": "用户名",
+     "roles": ["角色1", "角色2"],
+     "permissions": ["权限1", "权限2"]
+   }
+   ```
+
+### 设备API
+
+## 前后端交互流程
+
+1. 用户访问前端应用
+2. 如未登录，重定向到Gateway的OAuth2授权入口
+3. 登录成功后，Gateway将token写入Cookie并重定向回前端应用
+4. 前端应用使用Cookie凭证调用API
+5. Gateway验证Cookie中的令牌并转发请求到相应的微服务
+6. 微服务处理请求并返回结果
+
+通过以上迁移，系统将实现真正的前后端分离：前端负责界面与交互，后端专注提供数据与服务。这使得前端可以采用更丰富的技术栈和提升用户体验，而后端服务也更简洁、高内聚。同时，安全方面仍由后端把控——前端获取令牌后每次调API都带上，它依然经过网关和各服务的验证与权限控制，只是流程上不再依赖服务端模板渲染。这种演进符合现代 web 架构最佳实践，也是本项目规划的方向。
+
+**总结**：LedDeviceCloudPlatform 项目采用了微服务+OAuth2的后端架构，在开发初期以 Thymeleaf 临时提供必要的界面支持。随着前端开发完成，推荐逐步取消后端页面渲染，让前端通过调用后端开放的REST API来实现相同功能。这样既保留了后端完善的安全与业务逻辑支持（OAuth2认证、Gateway网关、安全过滤等），又充分发挥前端的灵活展示能力，最终形成前后端解耦、接口清晰、安全可靠的物联网设备云控制平台。
+
+# LedDeviceCloudPlatform 后端集成指南
+
+## 后端架构概述
+
+LedDeviceCloudPlatform是一个基于微服务架构的LED设备云控制平台，主要包含以下服务：
+
+- **Auth-Server**: 认证服务器，基于OAuth2+OIDC标准
+- **Gateway**: 网关服务，作为OAuth2客户端和API网关
+- **Core-Service**: 核心业务服务，提供设备管理功能
+
+## 前端集成要点
+
+### 认证流程
+
+1. 前端不直接处理token，由Gateway负责
+2. 登录时重定向到`http://localhost:8082/login`,由Gateway来完成整个OAuth2认证流程
+3. 认证成功后，Gateway将token写入Cookie
+4. 所有API请求需设置`withCredentials: true`确保发送Cookie
+
+### API调用规范
+
+1. 所有API请求通过Gateway网关：`http://localhost:8082/{后端服务前缀}/api/*`
+   core-service前缀: core
+2. API响应遵循统一格式：
+   ```json
+   {
+     "code": 200,
+     "message": "success",
+     "data": { ... }
+   }
+   ```
+3. 错误处理：监听401状态码处理未授权情况
+
+### 用户信息获取
+
+1. 获取当前用户信息：`GET /api/user/current`
+2. 用户信息包含：
+   ```json
+   {
+     "id": "用户ID",
+     "username": "用户名",
+     "roles": ["角色1", "角色2"],
+     "permissions": ["权限1", "权限2"]
+   }
+   ```
+
+### 设备API
+
+## 前后端交互流程
+
+1. 用户访问前端应用
+2. 如未登录，重定向到Gateway的OAuth2授权入口
+3. 登录成功后，Gateway将token写入Cookie并重定向回前端应用
+4. 前端应用使用Cookie凭证调用API
+5. Gateway验证Cookie中的令牌并转发请求到相应的微服务
+6. 微服务处理请求并返回结果
+
+通过以上迁移，系统将实现真正的前后端分离：前端负责界面与交互，后端专注提供数据与服务。这使得前端可以采用更丰富的技术栈和提升用户体验，而后端服务也更简洁、高内聚。同时，安全方面仍由后端把控——前端获取令牌后每次调API都带上，它依然经过网关和各服务的验证与权限控制，只是流程上不再依赖服务端模板渲染。这种演进符合现代 web 架构最佳实践，也是本项目规划的方向。
+
+**总结**：LedDeviceCloudPlatform 项目采用了微服务+OAuth2的后端架构，在开发初期以 Thymeleaf 临时提供必要的界面支持。随着前端开发完成，推荐逐步取消后端页面渲染，让前端通过调用后端开放的REST API来实现相同功能。这样既保留了后端完善的安全与业务逻辑支持（OAuth2认证、Gateway网关、安全过滤等），又充分发挥前端的灵活展示能力，最终形成前后端解耦、接口清晰、安全可靠的物联网设备云控制平台。

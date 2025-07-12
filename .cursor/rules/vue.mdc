@@ -1,0 +1,50 @@
+---
+description: Vue开发规范
+globs: **/*.vue
+alwaysApply: false
+---
+
+# Vue 开发规范
+
+## 组件命名
+
+- 组件名称使用PascalCase命名法（首字母大写）
+- 页面组件使用"View"作为后缀，如`LoginView.vue`
+- 通用组件不使用前缀，直接用功能命名，如`Button.vue`
+
+## 组件结构
+
+```vue
+<template>
+  <!-- 模板内容 -->
+</template>
+
+<script setup lang="ts">
+// 导入
+import { ref } from 'vue'
+
+// 状态定义
+const count = ref(0)
+
+// 方法定义
+const increment = () => {
+  count.value++
+}
+
+// 生命周期钩子
+onMounted(() => {
+  // 初始化逻辑
+})
+</script>
+
+<style scoped>
+/* 组件样式 */
+</style>
+
+## API调用 - API请求统一通过`/src/services`目录下的服务模块调用 - 使用Axios作为HTTP客户端 -
+所有请求需设置`withCredentials: true`确保发送cookies ## 路由 - 使用Vue Router管理路由 -
+在`/src/router/index.ts`中集中配置路由 - 对需要认证的路由使用路由守卫确保登录状态 ## 与后端集成 -
+前端不需要手动管理OAuth2 Token，由Gateway负责写入Cookie - API请求自动携带Cookie认证信息 -
+使用拦截器处理401响应，重定向到登录页面 - 优先使用计算属性而不是复杂的模板表达式 -
+使用v-for时必须提供key - 不要在同一元素上同时使用v-if和v-for - 复用组件时使用key确保完全重新渲染
+```
