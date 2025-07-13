@@ -1,186 +1,266 @@
 <template>
-  <div
-    class="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white pt-24 px-4 pb-10"
-  >
-    <div class="container mx-auto max-w-6xl">
-      <!-- 用户信息面板 -->
-      <div
-        v-if="user"
-        class="bg-gray-800 bg-opacity-50 rounded-xl border border-gray-700 shadow-xl overflow-hidden"
-      >
-        <!-- 顶部信息栏 -->
-        <div
-          class="p-6 md:p-8 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-b border-gray-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
-        >
-          <div class="flex items-center">
-            <div
-              class="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-2xl font-bold mr-4"
+  <AppLayout>
+    <div class="w-full py-6">
+      <!-- 页面标题和操作栏 -->
+      <div class="w-full px-4 sm:px-6 lg:px-8 mb-6">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+          <div>
+            <h1
+              class="text-3xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500"
             >
-              {{ user.username?.charAt(0).toUpperCase() || 'U' }}
-            </div>
-            <div>
-              <h2 class="text-2xl font-bold text-white mb-1">{{ user.username }}</h2>
-              <p class="text-gray-300">{{ user.orgName || '未指定组织' }}</p>
-            </div>
+              仪表盘
+            </h1>
+            <p class="text-gray-400">查看和管理您的设备和用户</p>
           </div>
-          <div class="flex space-x-3">
-            <button
-              class="px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 transition-colors text-white"
-            >
-              修改资料
-            </button>
-            <button
-              class="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors text-white"
-            >
-              退出登录
-            </button>
-          </div>
-        </div>
 
-        <!-- 用户详细信息 -->
-        <div class="p-6 md:p-8">
-          <h3 class="text-xl font-semibold mb-6 text-blue-400">账户信息</h3>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="space-y-4">
-              <div class="flex flex-col">
-                <span class="text-gray-400 text-sm mb-1">用户ID</span>
-                <span class="text-white">{{ user.uid || '未设置' }}</span>
-              </div>
-
-              <div class="flex flex-col">
-                <span class="text-gray-400 text-sm mb-1">用户组</span>
-                <span class="text-white">{{ user.ugName || '未设置' }}</span>
-              </div>
-            </div>
-
-            <div class="space-y-4">
-              <div class="flex flex-col">
-                <span class="text-gray-400 text-sm mb-1">电子邮箱</span>
-                <span class="text-white">{{ user.email || '未设置' }}</span>
-              </div>
-
-              <div class="flex flex-col">
-                <span class="text-gray-400 text-sm mb-1">联系电话</span>
-                <span class="text-white">{{ user.phone || '未设置' }}</span>
-              </div>
-            </div>
+          <div class="flex items-center space-x-3 mt-4 md:mt-0">
+            <Button @click="refreshData" :disabled="isRefreshing" variant="ghost">
+              <ArrowPathIcon class="w-5 h-5 mr-2" :class="{ 'animate-spin': isRefreshing }" />
+              {{ isRefreshing ? '刷新中...' : '刷新' }}
+            </Button>
           </div>
         </div>
       </div>
 
-      <!-- 加载状态 -->
-      <div v-else-if="loading" class="flex flex-col items-center justify-center py-20">
-        <div
-          class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"
-        ></div>
-        <p class="text-xl text-gray-300">正在加载用户信息...</p>
-      </div>
-
-      <!-- 错误状态 -->
-      <div
-        v-else
-        class="bg-gray-800 bg-opacity-50 rounded-xl border border-gray-700 shadow-xl p-6 md:p-8"
-      >
-        <div class="text-center mb-8">
+      <!-- 内容容器 -->
+      <div class="w-full px-4 sm:px-6 lg:px-8">
+        <!-- 加载状态 -->
+        <div v-if="loading" class="flex flex-col items-center justify-center py-32">
           <div
-            class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-500/20 text-red-400 mb-4"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-8 w-8"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
-          </div>
-          <h2 class="text-2xl font-bold text-white mb-2">加载用户信息失败</h2>
-          <p class="text-gray-300">请检查您的网络连接或重新登录</p>
+            class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"
+          ></div>
+          <p class="text-xl text-gray-300">正在加载数据...</p>
         </div>
 
-        <!-- 调试信息 -->
-        <div class="bg-gray-900 bg-opacity-50 rounded-lg border border-gray-700 p-4 mt-6">
-          <h3 class="text-lg font-medium text-gray-300 mb-3">调试信息</h3>
-          <pre class="text-gray-400 text-sm overflow-x-auto whitespace-pre-wrap">{{
-            debugInfo
-          }}</pre>
+        <!-- 错误状态 -->
+        <div v-else-if="error">
+          <Card variant="bordered" padding="lg">
+            <div class="text-center py-8">
+              <div
+                class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-500/20 text-red-400 mb-4"
+              >
+                <ExclamationTriangleIcon class="w-8 h-8" />
+              </div>
+              <h2 class="text-2xl font-bold text-white mb-2">{{ error }}</h2>
+              <p class="text-gray-300 mb-6">请检查您的网络连接或重新登录</p>
+              <Button @click="refreshData" variant="primary">重试</Button>
+            </div>
+          </Card>
+        </div>
+
+        <!-- 内容区域 -->
+        <div v-else class="w-full">
+          <!-- 用户信息卡片 -->
+          <Card v-if="userInfo" variant="bordered" class="mb-8">
+            <div
+              class="p-6 md:p-8 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-b border-gray-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+            >
+              <div class="flex items-center">
+                <div
+                  class="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-2xl font-bold mr-4"
+                >
+                  {{ userInfo.username?.charAt(0).toUpperCase() || 'U' }}
+                </div>
+                <div>
+                  <h2 class="text-2xl font-bold text-white mb-1">{{ userInfo.username }}</h2>
+                  <p class="text-gray-300">{{ userInfo.roles?.join(', ') || '未指定角色' }}</p>
+                </div>
+              </div>
+              <Button variant="ghost">查看详情</Button>
+            </div>
+          </Card>
+
+          <!-- 设备统计卡片 -->
+          <div class="mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card variant="bordered" hover>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-400 mb-1">总设备数</p>
+                    <p class="text-3xl font-bold text-white">{{ devices.length }}</p>
+                  </div>
+                  <div
+                    class="w-12 h-12 rounded-lg bg-blue-500 bg-opacity-20 flex items-center justify-center"
+                  >
+                    <SignalIcon class="w-6 h-6 text-blue-400" />
+                  </div>
+                </div>
+              </Card>
+
+              <Card variant="bordered" hover>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-400 mb-1">在线设备</p>
+                    <p class="text-3xl font-bold text-white">
+                      {{ devices.filter((d) => d.status === 'online').length }}
+                    </p>
+                  </div>
+                  <div
+                    class="w-12 h-12 rounded-lg bg-green-500 bg-opacity-20 flex items-center justify-center"
+                  >
+                    <SignalIcon class="w-6 h-6 text-green-400" />
+                  </div>
+                </div>
+              </Card>
+
+              <Card variant="bordered" hover>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-400 mb-1">离线设备</p>
+                    <p class="text-3xl font-bold text-white">
+                      {{ devices.filter((d) => d.status === 'offline').length }}
+                    </p>
+                  </div>
+                  <div
+                    class="w-12 h-12 rounded-lg bg-red-500 bg-opacity-20 flex items-center justify-center"
+                  >
+                    <SignalIcon class="w-6 h-6 text-red-400" />
+                  </div>
+                </div>
+              </Card>
+            </div>
+          </div>
+
+          <!-- 设备列表 -->
+          <Card variant="bordered" class="mb-8">
+            <div class="p-6 border-b border-gray-700 flex justify-between items-center">
+              <h2 class="text-xl font-semibold text-white">设备列表</h2>
+              <div class="flex items-center space-x-2">
+                <input
+                  type="text"
+                  placeholder="搜索设备..."
+                  class="px-3 py-1 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            <div class="p-6">
+              <div v-if="devices.length === 0" class="text-center py-12">
+                <p class="text-gray-400 text-lg">暂无设备数据</p>
+                <Button variant="primary" class="mt-4">添加设备</Button>
+              </div>
+
+              <div
+                v-else
+                class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+              >
+                <Card
+                  v-for="device in devices"
+                  :key="device.id"
+                  variant="bordered"
+                  padding="none"
+                  hover
+                >
+                  <div class="p-5 border-b border-gray-600 flex justify-between items-center">
+                    <h3 class="font-medium text-white">{{ device.name }}</h3>
+                    <div class="flex items-center">
+                      <span
+                        class="inline-block w-2 h-2 rounded-full mr-2"
+                        :class="statusMap[device.status]?.color || 'bg-gray-500'"
+                      ></span>
+                      <span class="text-sm text-gray-300">{{
+                        statusMap[device.status]?.text || device.status
+                      }}</span>
+                    </div>
+                  </div>
+
+                  <div class="p-5">
+                    <div class="space-y-3 mb-5">
+                      <div class="flex justify-between">
+                        <span class="text-gray-400">设备ID</span>
+                        <span class="text-white">{{ device.id }}</span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="text-gray-400">设备类型</span>
+                        <span class="text-white">{{ device.type }}</span>
+                      </div>
+                      <div class="flex justify-between" v-if="device.lastActive">
+                        <span class="text-gray-400">最后活动</span>
+                        <span class="text-white">{{ device.lastActive }}</span>
+                      </div>
+                    </div>
+
+                    <div class="flex justify-between space-x-2">
+                      <Button variant="primary" fullWidth size="sm">控制</Button>
+                      <Button variant="ghost" fullWidth size="sm">详情</Button>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            </div>
+          </Card>
         </div>
       </div>
     </div>
-  </div>
+  </AppLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { fetchCurrentUser } from '@/services/user'
-import type { UserInfo } from '@/services/user'
-import { useRouter } from 'vue-router'
-import axios, { AxiosError } from 'axios'
+import AppLayout from '@/components/layout/AppLayout.vue'
+import Card from '@/components/ui/Card.vue'
+import Button from '@/components/ui/Button.vue'
+import { userService, deviceService } from '../services/api'
+import type { UserInfo, Device } from '../services/api'
+import { ArrowPathIcon, SignalIcon, ExclamationTriangleIcon } from '@heroicons/vue/24/outline'
 
-const user = ref<UserInfo | null>(null)
-const router = useRouter()
+const userInfo = ref<UserInfo | null>(null)
+const devices = ref<Device[]>([])
 const loading = ref(true)
-const debugInfo = ref('')
+const error = ref('')
+const isRefreshing = ref(false)
 
-onMounted(async () => {
-  debugInfo.value = '开始获取用户信息...\n'
-  debugInfo.value += `当前Cookie: ${document.cookie || '无cookie'}\n`
+// 设备状态映射
+interface StatusMapType {
+  [key: string]: { color: string; text: string }
+}
+
+const statusMap: StatusMapType = {
+  online: { color: 'bg-green-500', text: '在线' },
+  offline: { color: 'bg-gray-500', text: '离线' },
+  warning: { color: 'bg-yellow-500', text: '警告' },
+  error: { color: 'bg-red-500', text: '错误' },
+}
+
+// 加载数据
+const loadData = async () => {
+  loading.value = true
+  error.value = ''
 
   try {
-    // 尝试直接获取用户信息
-    debugInfo.value += '调用fetchCurrentUser()...\n'
-    user.value = await fetchCurrentUser()
+    // 获取当前用户信息，Gateway会自动处理cookie认证
+    const userData = await userService.getCurrentUser()
+    userInfo.value = userData
 
-    if (user.value) {
-      debugInfo.value += `获取用户信息成功: ${JSON.stringify(user.value, null, 2)}\n`
-      loading.value = false
-    } else {
-      debugInfo.value += '获取用户信息失败: 返回null\n'
-      loading.value = false
-
-      // 尝试直接调用API进行调试
-      debugInfo.value += '尝试直接调用API...\n'
-      try {
-        const response = await axios.get('/core/api/user/current', {
-          withCredentials: true,
-        })
-        debugInfo.value += `API直接调用结果: ${JSON.stringify(response.data, null, 2)}\n`
-      } catch (apiError) {
-        const error = apiError as AxiosError
-        debugInfo.value += `API直接调用错误: ${error.message || '未知错误'}\n`
-        if (error.response) {
-          debugInfo.value += `状态码: ${error.response.status}\n`
-          debugInfo.value += `响应数据: ${JSON.stringify(error.response.data, null, 2)}\n`
-        }
-      }
-
-      // 5秒后跳转回首页
-      setTimeout(() => {
-        router.push('/')
-      }, 10000)
+    // 尝试获取设备列表
+    try {
+      const deviceData = await deviceService.getDevices()
+      devices.value = deviceData
+    } catch (deviceError) {
+      console.error('获取设备列表失败', deviceError)
+      // 设备获取失败不影响页面整体展示
     }
-  } catch (error) {
-    const axiosError = error as AxiosError
-    debugInfo.value += `获取用户信息异常: ${axiosError.message || '未知错误'}\n`
-    if (axiosError.response) {
-      debugInfo.value += `状态码: ${axiosError.response.status}\n`
-      debugInfo.value += `响应数据: ${JSON.stringify(axiosError.response.data, null, 2)}\n`
-    }
+  } catch (err: unknown) {
+    console.error('获取用户信息失败', err)
+    error.value = '无法获取用户信息，您可能需要重新登录'
+  } finally {
     loading.value = false
-
-    // 5秒后跳转回首页
-    setTimeout(() => {
-      router.push('/')
-    }, 10000)
   }
-})
+}
+
+// 刷新数据
+const refreshData = async () => {
+  if (isRefreshing.value) return
+
+  isRefreshing.value = true
+  try {
+    await loadData()
+  } finally {
+    isRefreshing.value = false
+  }
+}
+
+onMounted(loadData)
 </script>
 
 <style scoped>
