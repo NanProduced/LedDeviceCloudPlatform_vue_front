@@ -1,10 +1,18 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
-import LoginView from '../views/LoginView.vue'
 import LandingView from '../views/LandingView.vue'
-import OAuth2CallbackView from '../views/OAuth2CallbackView.vue'
+import LoginView from '../views/LoginView.vue'
 import DashboardView from '../views/DashboardView.vue'
-import { userService } from '../services/api'
+import OAuth2CallbackView from '../views/OAuth2CallbackView.vue'
+import { useUserStore } from '@/stores/userStore'
+
+// 懒加载路由
+const UserListView = () => import('../views/UserListView.vue')
+const ProfileView = () => import('../views/ProfileView.vue')
+const OrganizationView = () => import('../views/OrganizationView.vue')
+const UserGroupView = () => import('../views/UserGroupView.vue')
+const RolesView = () => import('../views/RolesView.vue')
+const TerminalListView = () => import('../views/TerminalListView.vue')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -13,74 +21,104 @@ const router = createRouter({
       path: '/',
       name: 'landing',
       component: LandingView,
-      meta: { requiresAuth: false },
-    },
-    {
-      path: '/dashboard',
-      name: 'dashboard',
-      component: DashboardView,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: false, layout: 'none' },
     },
     {
       path: '/home',
       name: 'home',
       component: HomeView,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, layout: 'app' },
     },
     {
       path: '/login',
       name: 'login',
       component: LoginView,
+      meta: { requiresAuth: false, layout: 'none' },
+    },
+    {
+      path: '/dashboard',
+      name: 'dashboard',
+      component: DashboardView,
+      meta: { requiresAuth: true, layout: 'app' },
     },
     {
       path: '/oauth2/callback',
       name: 'oauth2-callback',
       component: OAuth2CallbackView,
+      meta: { requiresAuth: false, layout: 'none' },
     },
     {
-      path: '/about',
-      name: 'about',
-      component: () => import('../views/AboutView.vue'),
-      meta: { requiresAuth: true },
+      path: '/terminals',
+      name: 'terminals',
+      component: TerminalListView,
+      meta: { requiresAuth: true, layout: 'app' },
+    },
+    // 用户管理路由
+    {
+      path: '/users',
+      name: 'users',
+      component: UserListView,
+      meta: { requiresAuth: true, layout: 'app' },
+    },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: ProfileView,
+      meta: { requiresAuth: true, layout: 'app' },
+    },
+    {
+      path: '/organizations',
+      name: 'organizations',
+      component: OrganizationView,
+      meta: { requiresAuth: true, layout: 'app' },
+    },
+    {
+      path: '/user-groups',
+      name: 'user-groups',
+      component: UserGroupView,
+      meta: { requiresAuth: true, layout: 'app' },
+    },
+    {
+      path: '/roles',
+      name: 'roles',
+      component: RolesView,
+      meta: { requiresAuth: true, layout: 'app' },
+    },
+    // 捕获所有未匹配的路由，重定向到首页
+    {
+      path: '/:pathMatch(.*)*',
+      redirect: '/',
     },
   ],
 })
 
-// 全局路由守卫，检查用户是否已经登录
+// 路由守卫，确保认证状态
 router.beforeEach(async (to, from, next) => {
-  console.log(`路由守卫: 从 ${from.path} 到 ${to.path}`)
+  // 获取布局类型
+  const layout = to.meta.layout || 'app'
 
-  // 检查路由是否需要身份验证
-  if (to.matched.some((record) => record.meta.requiresAuth)) {
-    try {
-      // 尝试获取用户信息，如果失败则表示未登录
-      // Gateway会处理cookie中的认证信息
-      console.log('路由守卫: 尝试获取用户信息')
-      await userService.getCurrentUser()
-      // 成功获取用户信息，允许访问
-      console.log('路由守卫: 用户已登录，允许访问')
-      next()
-    } catch (error) {
-      console.error('认证检查失败', error)
-      // 未登录，重定向到landing页面
-      console.log('路由守卫: 用户未登录，重定向到landing页面')
-      next({ name: 'landing' })
+  if (to.meta.requiresAuth) {
+    const userStore = useUserStore()
+
+    // 如果尚未加载用户信息，尝试加载
+    if (!userStore.isAuthenticated && !userStore.loading) {
+      try {
+        await userStore.loadCurrentUser()
+      } catch (error) {
+        console.error('Failed to load user data:', error)
+      }
     }
-  } else if (to.path === '/' && to.name === 'landing') {
-    try {
-      // 检查是否已登录，如果已登录则直接进入dashboard
-      console.log('路由守卫: 访问首页，检查是否已登录')
-      await userService.getCurrentUser()
-      console.log('路由守卫: 用户已登录，重定向到dashboard')
-      next({ name: 'dashboard' })
-    } catch {
-      // 未登录，允许访问landing页面
-      console.log('路由守卫: 用户未登录，允许访问landing页面')
+
+    // 检查认证状态
+    if (userStore.isAuthenticated) {
       next()
+    } else {
+      next({
+        name: 'login',
+        query: { redirect: to.fullPath },
+      })
     }
   } else {
-    // 不需要验证的路由，直接访问
-    console.log('路由守卫: 不需要验证的路由，直接访问')
     next()
   }
 })
