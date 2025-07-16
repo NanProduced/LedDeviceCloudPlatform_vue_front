@@ -18,12 +18,13 @@
             LED Cloud Platform
           </span>
         </div>
-        <button
-          @click="handleLogin"
-          class="px-4 sm:px-6 py-2 rounded-md bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 transition-all duration-300 font-medium shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 text-sm sm:text-base"
+        <!-- 修改导航栏上方的登录按钮 -->
+        <a
+          href="http://192.168.1.222:8082/oauth2/authorization/gateway-server?redirect_uri=http://192.168.1.222:5179/dashboard"
+          class="px-4 sm:px-6 py-2 rounded-md bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 transition-all duration-300 font-medium shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 text-sm sm:text-base inline-block"
         >
           Login Now
-        </button>
+        </a>
       </div>
     </header>
 
@@ -86,13 +87,14 @@
             >
               Transform your digital signage with our cloud platform
             </p>
-            <button
-              @click="handleLogin"
-              class="px-8 sm:px-10 md:px-12 py-4 md:py-5 text-lg sm:text-xl md:text-2xl rounded-md bg-blue-500 hover:bg-blue-600 transition-all duration-300 font-medium shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 transform hover:-translate-y-1 animate-fade-in opacity-0"
+            <!-- 修改中间部分的Get Started按钮 -->
+            <a
+              href="http://192.168.1.222:8082/oauth2/authorization/gateway-server?redirect_uri=http://192.168.1.222:5179/dashboard"
+              class="px-8 sm:px-10 md:px-12 py-4 md:py-5 text-lg sm:text-xl md:text-2xl rounded-md bg-blue-500 hover:bg-blue-600 transition-all duration-300 font-medium shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 transform hover:-translate-y-1 animate-fade-in opacity-0 inline-block"
               style="animation-delay: 1s"
             >
               Get Started
-            </button>
+            </a>
 
             <div
               class="mt-16 md:mt-20 max-w-lg mx-auto md:mx-0 animate-fade-in opacity-0"
@@ -156,13 +158,7 @@
                   />
 
                   <!-- 显示器屏幕内容 -->
-                  <rect
-                    x="155"
-                    y="105"
-                    width="90"
-                    height="70"
-                    fill="#1E293B"
-                  />
+                  <rect x="155" y="105" width="90" height="70" fill="#1E293B" />
 
                   <!-- 显示器上的图表/数据可视化 -->
                   <polyline
@@ -214,8 +210,22 @@
                   <circle cx="290" cy="240" r="4" fill="#4B9FFF" />
 
                   <!-- 设备小图标 -->
-                  <circle cx="120" cy="170" r="10" fill="#2C3E8C" stroke="#5B8DEF" stroke-width="1" />
-                  <circle cx="290" cy="120" r="8" fill="#2C3E8C" stroke="#5B8DEF" stroke-width="1" />
+                  <circle
+                    cx="120"
+                    cy="170"
+                    r="10"
+                    fill="#2C3E8C"
+                    stroke="#5B8DEF"
+                    stroke-width="1"
+                  />
+                  <circle
+                    cx="290"
+                    cy="120"
+                    r="8"
+                    fill="#2C3E8C"
+                    stroke="#5B8DEF"
+                    stroke-width="1"
+                  />
                   <circle cx="230" cy="60" r="6" fill="#2C3E8C" stroke="#5B8DEF" stroke-width="1" />
 
                   <!-- 渐变定义 -->
@@ -309,7 +319,9 @@
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
           <!-- 数据1 -->
           <div class="text-center" data-aos="zoom-in" data-aos-delay="100">
-            <div class="text-4xl sm:text-5xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 mb-2">
+            <div
+              class="text-4xl sm:text-5xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 mb-2"
+            >
               1000+
             </div>
             <div class="text-sm sm:text-base text-gray-400">活跃客户</div>
@@ -317,7 +329,9 @@
 
           <!-- 数据2 -->
           <div class="text-center" data-aos="zoom-in" data-aos-delay="200">
-            <div class="text-4xl sm:text-5xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 mb-2">
+            <div
+              class="text-4xl sm:text-5xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 mb-2"
+            >
               5000+
             </div>
             <div class="text-sm sm:text-base text-gray-400">已连接设备</div>
@@ -325,7 +339,9 @@
 
           <!-- 数据3 -->
           <div class="text-center" data-aos="zoom-in" data-aos-delay="300">
-            <div class="text-4xl sm:text-5xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 mb-2">
+            <div
+              class="text-4xl sm:text-5xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 mb-2"
+            >
               99.9%
             </div>
             <div class="text-sm sm:text-base text-gray-400">系统稳定性</div>
@@ -333,7 +349,9 @@
 
           <!-- 数据4 -->
           <div class="text-center" data-aos="zoom-in" data-aos-delay="400">
-            <div class="text-4xl sm:text-5xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 mb-2">
+            <div
+              class="text-4xl sm:text-5xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 mb-2"
+            >
               24/7
             </div>
             <div class="text-sm sm:text-base text-gray-400">全天候技术支持</div>
@@ -1092,28 +1110,47 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import AOS from 'aos'
 import 'aos/dist/aos.css'
 
-// OAuth2登录处理
-const handleLogin = () => {
-  // 动态获取当前主机地址作为回调URL
-  const currentHost = window.location.origin
-  const callbackUrl = `${currentHost}/oauth2/callback`
-
-  // 跳转到Gateway OAuth2认证入口，并带上前端回调地址
-  window.location.href = `http://192.168.1.222:8082/oauth2/authorization/gateway-server?redirect_uri=${encodeURIComponent(callbackUrl)}`
-}
+// 滚动相关函数和状态
 
 // 滚动相关状态
 const isScrolled = ref(false)
 const showBackToTop = ref(false)
-const mobileMenuOpen = ref(false)
 
 // 滚动监听函数
 const handleScroll = () => {
-  // 检查滚动位置以更新导航栏样式
-  isScrolled.value = window.scrollY > 10
-  // 检查滚动位置以显示/隐藏回到顶部按钮
-  showBackToTop.value = window.scrollY > 300
+  const scrollPosition = window.scrollY
+  isScrolled.value = scrollPosition > 50
+  showBackToTop.value = scrollPosition > 500
+
+  // 如果有ID锚点，处理滚动导航高亮
+  const sections = document.querySelectorAll('section[id]')
+  sections.forEach((section) => {
+    const sectionTop = (section as HTMLElement).offsetTop - 100
+    const sectionHeight = (section as HTMLElement).offsetHeight
+    const sectionId = section.getAttribute('id')
+
+    if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
+      document.querySelectorAll('.nav-link').forEach((link) => {
+        link.classList.remove('active')
+      })
+      document.querySelector(`.nav-link[href="#${sectionId}"]`)?.classList.add('active')
+    }
+  })
 }
+
+// 生命周期钩子
+onMounted(() => {
+  window.addEventListener('scroll', handleScroll)
+  AOS.init({
+    duration: 800,
+    offset: 100,
+    once: true,
+  })
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
 
 // 回到顶部
 const scrollToTop = () => {
@@ -1122,33 +1159,6 @@ const scrollToTop = () => {
     behavior: 'smooth',
   })
 }
-
-// 切换移动端菜单
-const toggleMobileMenu = () => {
-  mobileMenuOpen.value = !mobileMenuOpen.value
-}
-
-// 生命周期钩子
-onMounted(() => {
-  // 初始化AOS动画库
-  AOS.init({
-    duration: 800,
-    easing: 'ease-out',
-    once: true,
-    offset: 120,
-  })
-
-  // 添加滚动监听
-  window.addEventListener('scroll', handleScroll)
-
-  // 初始检查滚动位置
-  handleScroll()
-})
-
-onUnmounted(() => {
-  // 移除滚动监听
-  window.removeEventListener('scroll', handleScroll)
-})
 </script>
 
 <style>

@@ -1,9 +1,21 @@
 <script setup lang="ts">
-import { RouterView } from 'vue-router'
+import { RouterView, useRoute } from 'vue-router'
+import AppLayout from './components/layout/AppLayout.vue'
+import { computed } from 'vue'
+
+const route = useRoute()
+const needsLayout = computed(() => {
+  // 检查当前路由是否需要应用布局
+  return route.meta.layout !== 'none'
+})
 </script>
 
 <template>
-  <RouterView />
+  <!-- 根据路由元数据决定是否应用布局 -->
+  <AppLayout v-if="needsLayout">
+    <RouterView />
+  </AppLayout>
+  <RouterView v-else />
 </template>
 
 <style>

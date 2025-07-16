@@ -1,16 +1,22 @@
 import { defineStore } from 'pinia'
-import roleService, { RoleInfo, CreateRoleRequest } from '@/services/roleService'
+import roleService from '@/services/roleService'
+import type {
+  RoleInfo,
+  CreateRoleRequest,
+  UpdateRoleRequest,
+  PermissionInfo,
+} from '@/services/roleService'
 
 export const useRoleStore = defineStore('role', {
   state: () => ({
     roles: [] as RoleInfo[],
-    permissions: [] as any[],
+    permissions: [] as PermissionInfo[],
     loading: false,
     error: null as string | null,
   }),
 
   getters: {
-    getRoleById: (state) => (id: number) => state.roles.find((role) => role.id === id),
+    getRoleById: (state) => (rid: number) => state.roles.find((role) => role.rid === rid),
 
     // 按权限过滤角色
     getRolesByPermission: (state) => (permissionId: number) => {
@@ -26,40 +32,71 @@ export const useRoleStore = defineStore('role', {
       this.loading = true
       try {
         const response = await roleService.getRoles()
-        this.roles = response.data.data
+        console.log('roleStore.loadRoles 收到响应:', response)
+
+        // 处理不同的响应格式
+        if (response.data && response.data.visibleRoles) {
+          this.roles = response.data.visibleRoles
+        } else if (response.data && response.data.data && response.data.data.visibleRoles) {
+          this.roles = response.data.data.visibleRoles
+        } else if (
+          response.data &&
+          response.data.data &&
+          response.data.data.data &&
+          response.data.data.data.visibleRoles
+        ) {
+          this.roles = response.data.data.data.visibleRoles
+        } else {
+          console.warn('角色数据格式异常:', response)
+          this.roles = []
+        }
+
         this.error = null
       } catch (error: any) {
+        console.error('加载角色列表失败:', error)
         this.error = error.message || '获取角色列表失败'
+        if (process.env.NODE_ENV === 'development') {
+          this.roles = roleService.mockRoles()
+        }
       } finally {
         this.loading = false
       }
     },
-
     // 加载权限列表
     async loadPermissions() {
       this.loading = true
       try {
         const response = await roleService.getPermissions()
-        this.permissions = response.data.data
+        console.log('roleStore.loadPermissions 收到响应:', response)
+
+        // 处理不同的响应格式
+        if (response.data && response.data.data) {
+          this.permissions = response.data.data
+        } else if (response.data) {
+          this.permissions = response.data
+        } else {
+          console.warn('权限数据格式异常:', response)
+          this.permissions = []
+        }
+
         this.error = null
       } catch (error: any) {
+        console.error('加载权限列表失败:', error)
         this.error = error.message || '获取权限列表失败'
+        if (process.env.NODE_ENV === 'development') {
+          this.permissions = roleService.mockPermissions()
+        }
       } finally {
         this.loading = false
       }
     },
-
     // 创建角色
     async createRole(roleData: CreateRoleRequest) {
       this.loading = true
       try {
-        const response = await roleService.createRole(roleData)
-
-        // 重新加载角色列表以获取最新数据
+        await roleService.createRole(roleData)
         await this.loadRoles()
-
         this.error = null
-        return response.data.data
       } catch (error: any) {
         this.error = error.message || '创建角色失败'
         throw error
@@ -67,20 +104,12 @@ export const useRoleStore = defineStore('role', {
         this.loading = false
       }
     },
-
     // 更新角色
-    async updateRole(id: number, roleData: Partial<CreateRoleRequest>) {
+    async updateRole(roleData: UpdateRoleRequest) {
       this.loading = true
       try {
-        await roleService.updateRole(id, roleData)
-
-        // 更新本地状态
-        const role = this.roles.find((r) => r.id === id)
-        if (role) {
-          if (roleData.roleName) role.roleName = roleData.roleName
-          if (roleData.permissions) role.permissions = roleData.permissions
-        }
-
+        await roleService.updateRole(roleData)
+        await this.loadRoles()
         this.error = null
       } catch (error: any) {
         this.error = error.message || '更新角色失败'
@@ -89,16 +118,12 @@ export const useRoleStore = defineStore('role', {
         this.loading = false
       }
     },
-
     // 删除角色
-    async deleteRole(id: number) {
+    async deleteRole(rid: number) {
       this.loading = true
       try {
-        await roleService.deleteRole(id)
-
-        // 从本地状态中移除
-        this.roles = this.roles.filter((role) => role.id !== id)
-
+        await roleService.deleteRole(rid)
+        await this.loadRoles()
         this.error = null
       } catch (error: any) {
         this.error = error.message || '删除角色失败'

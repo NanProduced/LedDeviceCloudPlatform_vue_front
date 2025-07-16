@@ -1,4 +1,5 @@
-import api, { ApiResponse, UserInfo } from './api'
+import api from './api'
+import type { ApiResponse, UserInfo } from './api'
 
 // 创建用户请求参数
 export interface CreateUserRequest {
@@ -16,11 +17,58 @@ export interface ChangePasswordRequest {
   newPassword: string
 }
 
+// 分配角色请求参数
+export interface AssignRolesRequest {
+  targetUid: number
+  rids: number[]
+}
+
 // 移动用户请求参数
 export interface MoveUserRequest {
   uid: number
   sourceUgid: number
   targetUgid: number
+}
+
+// 用户列表请求参数
+export interface QueryUserListRequest {
+  ugid: number
+  includeSubGroups?: boolean
+  userNameKeyword?: string
+  emailKeyword?: string
+  phoneKeyword?: string
+  status?: number | null // 0:正常, 1:封禁, null:全部
+}
+
+export interface PageRequestDTOQueryUserListRequest {
+  pageNum: number
+  pageSize: number
+  sortField?: string
+  sortOrder?: string
+  params: QueryUserListRequest
+}
+
+// 用户列表响应
+export interface UserListResponse {
+  uid: number
+  username: string
+  ugid: number
+  ugName: string
+  email: string
+  active: number
+  roles: any[]
+  updateTime: string
+  createTime: string
+}
+
+export interface PageVOUserListResponse {
+  pageNum: number
+  pageSize: number
+  total: number
+  totalPages: number
+  records: UserListResponse[]
+  hasNext: boolean
+  hasPrevious: boolean
 }
 
 // 用户服务
@@ -38,6 +86,11 @@ export const userService = {
   // 修改密码
   changePassword: (passwordData: ChangePasswordRequest) => {
     return api.post<ApiResponse<any>>('/user/modify/pwd', passwordData)
+  },
+
+  // 分配角色
+  assignRoles: (assignData: AssignRolesRequest) => {
+    return api.post<ApiResponse<any>>('/user/assign-roles', assignData)
   },
 
   // 解封用户
@@ -60,9 +113,9 @@ export const userService = {
     return api.post<ApiResponse<any>>('/user/move', moveData)
   },
 
-  // TODO: 获取用户组内用户列表 (待后端实现)
-  getUsersInGroup: (ugid: number) => {
-    return api.get<ApiResponse<UserInfo[]>>(`/user/list?ugid=${ugid}`)
+  // 获取用户列表（按用户组）
+  getUserList: (pageParams: PageRequestDTOQueryUserListRequest) => {
+    return api.post<PageVOUserListResponse>('/user-group/list', pageParams)
   },
 }
 

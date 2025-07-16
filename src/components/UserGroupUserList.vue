@@ -160,7 +160,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { useUserStore } from '@/stores/userStore'
-import { UserListItem } from '@/services/userGroupService'
+import type { UserListItem } from '@/services/userGroupService'
 import { storeToRefs } from 'pinia'
 
 const props = defineProps({

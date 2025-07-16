@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import userGroupService from '@/services/userGroupService'
-import { UserGroupTreeNode, OrganizationDTO } from '@/services/userGroupService'
+import type { UserGroupTreeNode, OrganizationDTO } from '@/services/userGroupService'
 
 export const useUserGroupStore = defineStore('userGroup', {
   state: () => ({
@@ -63,16 +63,29 @@ export const useUserGroupStore = defineStore('userGroup', {
     async loadUserGroupTree() {
       this.loading = true
       try {
-        const response = await userGroupService.getUserGroupTree()
-        this.userGroupTree = response.data.data.root
-        this.organization = response.data.data.organization
-        this.error = null
+        console.log('开始从API加载用户组树...')
+        const data = await userGroupService.getUserGroupTree()
+        console.log('用户组树API响应:', data)
+
+        // 检查响应数据格式
+        if (data && data.root) {
+          this.userGroupTree = data.root
+          this.organization = data.organization
+        } else if (data && data.data && data.data.root) {
+          // 处理可能的嵌套响应格式
+          this.userGroupTree = data.data.root
+          this.organization = data.data.organization
+        } else {
+          console.error('用户组树数据格式异常:', data)
+          this.error = '用户组树数据格式异常'
+        }
 
         // 默认选中根节点
         if (this.userGroupTree) {
           this.selectedGroup = this.userGroupTree
         }
       } catch (error: any) {
+        console.error('获取用户组树失败:', error)
         this.error = error.message || '获取用户组树失败'
       } finally {
         this.loading = false
@@ -87,11 +100,11 @@ export const useUserGroupStore = defineStore('userGroup', {
       }
     },
 
-    // TODO: 创建用户组 (待后端实现)
-    async createUserGroup(parentId: number, name: string) {
+    // 创建用户组
+    async createUserGroup(parentId: number, name: string, description?: string) {
       this.loading = true
       try {
-        await userGroupService.createUserGroup(parentId, name)
+        await userGroupService.createUserGroup(parentId, name, description)
         // 重新加载用户组树以获取最新数据
         await this.loadUserGroupTree()
         this.error = null
@@ -103,28 +116,26 @@ export const useUserGroupStore = defineStore('userGroup', {
       }
     },
 
-    // TODO: 更新用户组 (待后端实现)
-    async updateUserGroup(id: number, name: string) {
-      this.loading = true
-      try {
-        await userGroupService.updateUserGroup(id, name)
+    // // 更新用户组（如后端支持可补充实现）
+    // async updateUserGroup(id: number, name: string, description?: string) {
+    //   this.loading = true
+    //   try {
+    //     await userGroupService.updateUserGroup(id, name, description)
+    //     // 更新本地状态
+    //     const group = this.findGroupById(id)
+    //     if (group) {
+    //       group.ugName = name
+    //     }
+    //     this.error = null
+    //   } catch (error: any) {
+    //     this.error = error.message || '更新用户组失败'
+    //     throw error
+    //   } finally {
+    //     this.loading = false
+    //   }
+    // },
 
-        // 更新本地状态
-        const group = this.findGroupById(id)
-        if (group) {
-          group.ugName = name
-        }
-
-        this.error = null
-      } catch (error: any) {
-        this.error = error.message || '更新用户组失败'
-        throw error
-      } finally {
-        this.loading = false
-      }
-    },
-
-    // TODO: 删除用户组 (待后端实现)
+    // 删除用户组
     async deleteUserGroup(id: number) {
       this.loading = true
       try {

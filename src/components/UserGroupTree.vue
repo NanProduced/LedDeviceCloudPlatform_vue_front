@@ -150,7 +150,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, nextTick } from 'vue'
 import { useUserGroupStore } from '@/stores/userGroupStore'
-import { UserGroupTreeNode } from '@/services/userGroupService'
+import type { UserGroupTreeNode } from '@/services/userGroupService'
 import TreeNode from '@/components/TreeNode.vue'
 
 const props = defineProps<{
@@ -187,19 +187,25 @@ const newGroupName = ref('')
 
 // 加载用户组树
 const loadUserGroupTree = async () => {
-  if (!root.value) {
+  try {
+    console.log('UserGroupTree组件: 开始加载用户组树...')
     await userGroupStore.loadUserGroupTree()
+    console.log('UserGroupTree组件: 用户组树加载结果:', userGroupStore.userGroupTree)
 
     // 如果没有选中的组，默认选中根组
     if (!selectedGroupId.value && root.value) {
+      console.log('UserGroupTree组件: 自动选择根组:', root.value.ugid)
       selectedGroupId.value = root.value.ugid
       emit('select', root.value.ugid)
     }
+  } catch (error) {
+    console.error('UserGroupTree组件: 加载用户组树失败:', error)
   }
 }
 
 // 处理选择
 const handleSelect = (groupId: number) => {
+  console.log(`用户选择了用户组: ${groupId}`)
   selectedGroupId.value = groupId
   emit('select', groupId)
   closeContextMenu()
@@ -295,9 +301,6 @@ const confirmDeleteGroup = async () => {
 }
 
 // 监听点击事件，关闭右键菜单
-onMounted(async () => {
-  await loadUserGroupTree()
-})
 </script>
 
 <style scoped>

@@ -1,20 +1,22 @@
 import { defineStore } from 'pinia'
-import userService, {
+import userService from '@/services/userService'
+import type {
   CreateUserRequest,
   MoveUserRequest,
   ChangePasswordRequest,
+  AssignRolesRequest,
 } from '@/services/userService'
-import userGroupService, {
+import userGroupService from '@/services/userGroupService'
+import type {
   UserGroupUserQueryParams,
   UserListItem,
   PageResponse,
 } from '@/services/userGroupService'
-import { UserInfo } from '@/services/api'
+import type { UserInfo } from '@/services/api'
 
 export const useUserStore = defineStore('user', {
   state: () => ({
     currentUser: null as UserInfo | null,
-    isAuthenticated: false,
     users: [] as UserInfo[],
     userListItems: [] as UserListItem[],
     pagination: {
@@ -31,6 +33,7 @@ export const useUserStore = defineStore('user', {
 
   getters: {
     getUserById: (state) => (id: number) => state.users.find((user) => user.uid === id),
+    isAuthenticated: (state) => !!state.currentUser,
   },
 
   actions: {
@@ -39,49 +42,60 @@ export const useUserStore = defineStore('user', {
       this.loading = true
       try {
         const response = await userService.getCurrentUser()
-        this.currentUser = response.data.data
-        this.isAuthenticated = true
+        console.log('获取当前用户信息响应:', response)
+
+        // 处理不同的响应格式
+        if (response.data && response.data.data) {
+          this.currentUser = response.data.data
+        } else if (response.data) {
+          this.currentUser = response.data
+        } else {
+          console.warn('用户数据格式异常:', response)
+          this.currentUser = null
+        }
+
         this.error = null
+        return this.currentUser
       } catch (error: any) {
+        console.error('获取用户信息失败:', error)
         this.error = error.message || '获取用户信息失败'
-        this.isAuthenticated = false
+        this.currentUser = null
+        throw error
       } finally {
         this.loading = false
       }
     },
 
-    // 加载指定用户组的用户列表 (旧方法，保留兼容)
-    async loadUsersInGroup(ugid: number) {
+    // 统一加载用户列表（支持分页、关键字、状态筛选）
+    async loadUserList(params: any) {
       this.loading = true
       try {
-        const response = await userService.getUsersInGroup(ugid)
-        this.users = response.data.data
-        this.error = null
-      } catch (error: any) {
-        this.error = error.message || '获取用户列表失败'
-      } finally {
-        this.loading = false
-      }
-    },
+        const response = await userService.getUserList(params)
+        console.log('获取用户列表响应:', response)
 
-    // 根据用户组ID查询用户列表（分页）
-    async loadUserListByGroup(queryParams: UserGroupUserQueryParams) {
-      this.loading = true
-      try {
-        const response = await userGroupService.getUserListByGroup(queryParams)
-        const pageData = response.data.data
-        this.userListItems = pageData.records
+        // 处理不同的响应格式
+        let pageData
+        if (response.data && response.data.data) {
+          pageData = response.data.data
+        } else if (response.data) {
+          pageData = response.data
+        } else {
+          pageData = response
+        }
+
+        this.userListItems = pageData.records || []
         this.pagination = {
-          pageNum: pageData.pageNum,
-          pageSize: pageData.pageSize,
-          total: pageData.total,
-          totalPages: pageData.totalPages,
-          hasNext: pageData.hasNext,
-          hasPrevious: pageData.hasPrevious,
+          pageNum: pageData.pageNum || 1,
+          pageSize: pageData.pageSize || 10,
+          total: pageData.total || 0,
+          totalPages: pageData.totalPages || 0,
+          hasNext: pageData.hasNext || false,
+          hasPrevious: pageData.hasPrevious || false,
         }
         this.error = null
         return pageData
       } catch (error: any) {
+        console.error('获取用户列表失败:', error)
         this.error = error.message || '获取用户列表失败'
         throw error
       } finally {
@@ -124,24 +138,41 @@ export const useUserStore = defineStore('user', {
       }
     },
 
+    // 分配角色
+    async assignRoles(assignData: AssignRolesRequest) {
+      this.loading = true
+      try {
+        await userService.assignRoles(assignData)
+        this.error = null
+
+        // 更新本地用户角色信息
+        const userItem = this.userListItems.find((u) => u.uid === assignData.targetUid)
+        if (userItem && assignData.rids) {
+          // 这里需要根据实际情况更新用户的角色信息
+          // 通常需要重新加载用户列表以获取最新角色信息
+        }
+      } catch (error: any) {
+        this.error = error.message || '分配角色失败'
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+
     // 启用用户
     async activateUser(uid: number) {
       this.loading = true
       try {
         await userService.activateUser(uid)
-
         // 更新本地用户状态
         const user = this.users.find((u) => u.uid === uid)
         if (user) {
-          user.status = 'active'
+          user.active = 0 // 0为正常
         }
-
-        // 同时更新userListItems中的状态
         const userItem = this.userListItems.find((u) => u.uid === uid)
         if (userItem) {
-          userItem.active = 1
+          userItem.active = 0
         }
-
         this.error = null
       } catch (error: any) {
         this.error = error.message || '启用用户失败'
@@ -150,25 +181,19 @@ export const useUserStore = defineStore('user', {
         this.loading = false
       }
     },
-
     // 禁用用户
     async deactivateUser(uid: number) {
       this.loading = true
       try {
         await userService.deactivateUser(uid)
-
-        // 更新本地用户状态
         const user = this.users.find((u) => u.uid === uid)
         if (user) {
-          user.status = 'inactive'
+          user.active = 1 // 1为封禁
         }
-
-        // 同时更新userListItems中的状态
         const userItem = this.userListItems.find((u) => u.uid === uid)
         if (userItem) {
-          userItem.active = 0
+          userItem.active = 1
         }
-
         this.error = null
       } catch (error: any) {
         this.error = error.message || '禁用用户失败'
@@ -234,7 +259,6 @@ export const useUserStore = defineStore('user', {
     // 登出
     logout() {
       this.currentUser = null
-      this.isAuthenticated = false
       this.users = []
       this.userListItems = []
       this.pagination = {

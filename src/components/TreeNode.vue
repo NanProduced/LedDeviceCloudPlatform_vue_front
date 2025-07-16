@@ -3,8 +3,8 @@
     <div
       :class="[
         'node-content',
-        { 'selected': isSelected },
-        { 'has-children': node.children && node.children.length > 0 }
+        { selected: isSelected },
+        { 'has-children': node.children && node.children.length > 0 },
       ]"
       @click="handleClick"
       @contextmenu="handleContextMenu"
@@ -18,7 +18,11 @@
           fill="currentColor"
           :class="{ 'rotate-90': expanded }"
         >
-          <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+          <path
+            fill-rule="evenodd"
+            d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+            clip-rule="evenodd"
+          />
         </svg>
         <svg
           v-else
@@ -66,7 +70,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { UserGroupTreeNode } from '@/services/userGroupService'
+import type { UserGroupTreeNode } from '@/services/userGroupService'
 
 // 定义props
 const props = defineProps<{
@@ -95,6 +99,7 @@ const toggleExpand = () => {
 
 // 处理点击事件
 const handleClick = () => {
+  console.log(`点击用户组节点: ${props.node.ugid} - ${props.node.ugName}`)
   emit('select', props.node.ugid)
 }
 

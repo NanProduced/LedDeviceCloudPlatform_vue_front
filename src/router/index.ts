@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import LandingView from '../views/LandingView.vue'
-import LoginView from '../views/LoginView.vue'
 import DashboardView from '../views/DashboardView.vue'
 import OAuth2CallbackView from '../views/OAuth2CallbackView.vue'
 import { useUserStore } from '@/stores/userStore'
@@ -28,12 +27,6 @@ const router = createRouter({
       name: 'home',
       component: HomeView,
       meta: { requiresAuth: true, layout: 'app' },
-    },
-    {
-      path: '/login',
-      name: 'login',
-      component: LoginView,
-      meta: { requiresAuth: false, layout: 'none' },
     },
     {
       path: '/dashboard',
@@ -113,10 +106,8 @@ router.beforeEach(async (to, from, next) => {
     if (userStore.isAuthenticated) {
       next()
     } else {
-      next({
-        name: 'login',
-        query: { redirect: to.fullPath },
-      })
+      // 重定向到首页而不是登录页
+      next({ path: '/' })
     }
   } else {
     next()

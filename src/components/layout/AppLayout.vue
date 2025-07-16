@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import {
   Bars3Icon,
   XMarkIcon,
@@ -10,18 +10,27 @@ import {
   UserCircleIcon,
   BellIcon,
   MagnifyingGlassIcon,
+  ArrowRightOnRectangleIcon,
+  ChevronDownIcon,
+  ShieldCheckIcon,
 } from '@heroicons/vue/24/outline'
+import { useUserStore } from '@/stores/userStore'
+import { authService } from '@/services/api'
 
 // 定义导航项
 const navItems = [
   { name: '仪表盘', icon: HomeIcon, to: '/dashboard', active: true },
   { name: '终端列表', icon: ComputerDesktopIcon, to: '/terminals', active: false },
   { name: '用户列表', icon: UsersIcon, to: '/users', active: false },
+  { name: '权限管理', icon: ShieldCheckIcon, to: '/roles', active: false },
   { name: '个人资料', icon: UserCircleIcon, to: '/profile', active: false },
 ]
 
 const route = useRoute()
+const router = useRouter()
+const userStore = useUserStore()
 const isSidebarOpen = ref(false)
+const isUserMenuOpen = ref(false)
 
 // 切换侧边栏
 const toggleSidebar = () => {
@@ -33,9 +42,25 @@ const closeSidebar = () => {
   isSidebarOpen.value = false
 }
 
+// 切换用户菜单
+const toggleUserMenu = () => {
+  isUserMenuOpen.value = !isUserMenuOpen.value
+}
+
+// 关闭用户菜单
+const closeUserMenu = () => {
+  isUserMenuOpen.value = false
+}
+
 // 检查当前路由是否激活
 const isActive = (path: string) => {
   return route.path === path
+}
+
+// 处理退出登录
+const handleLogout = () => {
+  // 调用网关的登出端点
+  authService.logout()
 }
 </script>
 
@@ -175,18 +200,54 @@ const isActive = (path: string) => {
               <BellIcon class="h-6 w-6" aria-hidden="true" />
             </button>
 
-            <!-- 用户头像 -->
+            <!-- 用户头像和下拉菜单 -->
             <div class="relative">
               <div>
                 <button
                   type="button"
                   class="flex items-center max-w-xs rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-blue-500"
+                  @click="toggleUserMenu"
                 >
                   <span class="sr-only">打开用户菜单</span>
                   <div
                     class="h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center"
                   >
-                    <span class="font-medium text-white">U</span>
+                    <span class="font-medium text-white">
+                      {{ userStore.currentUser?.username?.charAt(0).toUpperCase() || 'U' }}
+                    </span>
+                  </div>
+                  <ChevronDownIcon class="ml-1 h-4 w-4 text-gray-400" />
+                </button>
+              </div>
+
+              <!-- 用户下拉菜单 -->
+              <div
+                v-show="isUserMenuOpen"
+                class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
+                @click.away="closeUserMenu"
+              >
+                <div class="px-4 py-2 border-b border-gray-700">
+                  <p class="text-sm text-gray-300">
+                    {{ userStore.currentUser?.username || '用户' }}
+                  </p>
+                  <p class="text-xs text-gray-500 truncate">
+                    {{ userStore.currentUser?.email || '' }}
+                  </p>
+                </div>
+                <RouterLink
+                  to="/profile"
+                  class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                  @click="closeUserMenu"
+                >
+                  个人资料
+                </RouterLink>
+                <button
+                  @click="handleLogout"
+                  class="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                >
+                  <div class="flex items-center">
+                    <ArrowRightOnRectangleIcon class="mr-2 h-4 w-4 text-gray-400" />
+                    <span>退出登录</span>
                   </div>
                 </button>
               </div>

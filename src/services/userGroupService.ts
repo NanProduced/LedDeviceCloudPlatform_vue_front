@@ -1,4 +1,5 @@
-import api, { ApiResponse } from './api'
+import api from './api'
+import type { ApiResponse } from './api'
 
 // 用户组树节点类型
 export interface UserGroupTreeNode {
@@ -28,6 +29,7 @@ export interface UserRole {
   rid: number
   oid: number
   roleName: string
+  displayName: string // 添加显示名称字段
 }
 
 // 用户信息类型
@@ -58,7 +60,7 @@ export interface UserGroupUserQueryParams extends PageParams {
     includeSubGroups?: boolean
     userNameKeyword?: string
     emailKeyword?: string
-    phoneKeyword?: string
+    status?: number // 新增状态筛选字段：null-全部，0-正常，1-封禁
   }
 }
 
@@ -77,25 +79,55 @@ export interface PageResponse<T> {
 const userGroupService = {
   // 获取用户组树结构
   getUserGroupTree: () => {
-    return api.get<ApiResponse<UserGroupTreeResponse>>('/user-group/tree/init')
+    console.log('调用API: /user-group/tree/init')
+    return api
+      .get<ApiResponse<UserGroupTreeResponse>>('/user-group/tree/init')
+      .then((response) => {
+        console.log('getUserGroupTree API响应:', response)
+
+        // 处理不同的响应格式
+        if (response.data && response.data.data) {
+          return response.data.data
+        } else if (response.data) {
+          return response.data
+        } else {
+          console.warn('用户组树响应格式异常:', response)
+          throw new Error('获取用户组树失败：响应格式异常')
+        }
+      })
+      .catch((error) => {
+        console.error('getUserGroupTree API调用失败:', error)
+        throw error
+      })
   },
 
   // 根据用户组Id查询用户列表
   getUserListByGroup: (queryParams: UserGroupUserQueryParams) => {
+    // 确保请求体中包含ugid参数
+    if (!queryParams.params || !queryParams.params.ugid) {
+      console.error('缺少必要参数ugid')
+      throw new Error('缺少必要参数ugid')
+    }
+
+    // 使用POST方法，直接将参数作为请求体传递
     return api.post<ApiResponse<PageResponse<UserListItem>>>('/user-group/list', queryParams)
   },
 
-  // TODO: 创建用户组 (待后端实现)
-  createUserGroup: (parentUgid: number, ugName: string) => {
-    return api.post<ApiResponse<any>>('/user-group/create', { parentUgid, ugName })
+  // 创建用户组
+  createUserGroup: (parentUgid: number, userGroupName: string, description?: string) => {
+    return api.post<ApiResponse<any>>('/user-group/create', {
+      parentUgid,
+      userGroupName,
+      description,
+    })
   },
 
-  // TODO: 更新用户组 (待后端实现)
-  updateUserGroup: (ugid: number, ugName: string) => {
-    return api.post<ApiResponse<any>>('/user-group/update', { ugid, ugName })
-  },
+  // 更新用户组（如有后端支持，可补充实现）
+  // updateUserGroup: (ugid: number, userGroupName: string, description?: string) => {
+  //   return api.post<ApiResponse<any>>('/user-group/update', { ugid, userGroupName, description })
+  // },
 
-  // TODO: 删除用户组 (待后端实现)
+  // 删除用户组
   deleteUserGroup: (ugid: number) => {
     return api.post<ApiResponse<any>>(`/user-group/delete?ugid=${ugid}`)
   },

@@ -1,4 +1,5 @@
-import api, { ApiResponse } from './api'
+import api from './api'
+import type { ApiResponse } from './api'
 
 // 组织信息类型
 export interface OrganizationInfo {

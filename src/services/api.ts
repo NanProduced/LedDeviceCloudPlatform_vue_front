@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { AxiosResponse, AxiosError } from 'axios'
+import type { AxiosError } from 'axios'
 
 // API响应接口
 export interface ApiResponse<T> {
@@ -10,29 +10,22 @@ export interface ApiResponse<T> {
 
 // 创建axios实例
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '',
+  baseURL: '/core/api', // 只写代理前缀，确保开发环境走Vite代理
   withCredentials: true, // 确保跨域请求发送Cookie
   timeout: 30000,
 })
 
+console.log('API基础URL配置为:', api.defaults.baseURL)
+
 // 请求拦截器
 api.interceptors.request.use(
   (config) => {
-    // 对于core-service的请求，添加前缀
-    if (config.url && !config.url.startsWith('/oauth2') && !config.url.startsWith('/auth')) {
-      // 如果是访问core-service的接口，添加/core/api前缀
-      if (
-        config.url.startsWith('/user/') ||
-        config.url.startsWith('/role/') ||
-        config.url.startsWith('/org/') ||
-        config.url.startsWith('/user-group/')
-      ) {
-        config.url = `/core/api${config.url}`
-      }
-    }
+    console.log('发送请求:', config.method, config.url, config.data || config.params)
+    // 不再自动加/core/api前缀，直接返回config
     return config
   },
   (error) => {
+    console.error('请求拦截器错误:', error)
     return Promise.reject(error)
   },
 )
@@ -40,50 +33,52 @@ api.interceptors.request.use(
 // 响应拦截器
 api.interceptors.response.use(
   (response) => {
-    // 检查响应数据结构，适配不同的后端API返回格式
+    console.log('收到响应:', response.config.url, response.data)
+
+    // 检查响应结构
     if (response.data && response.data.hasOwnProperty('code')) {
-      // 如果是包含code字段的标准响应格式
+      console.log('响应包含code字段:', response.data.code)
+
       if (response.data.code !== 200 && response.data.code !== 0) {
-        // 业务逻辑错误
-        const error = new Error(response.data.msg || '操作失败') as any
+        const error = new Error(response.data.msg || '操作失败') as Error & {
+          response: typeof response
+          code: number
+        }
         error.response = response
         error.code = response.data.code
+        console.error('响应错误码:', response.data.code, response.data.msg)
         return Promise.reject(error)
       }
-      // 成功，返回data字段
+
+      // 成功，返回完整响应以便访问data字段
+      console.log('响应成功，返回完整响应:', response)
       return response
     }
-    // 直接返回原始响应
+
+    console.log('响应不包含code字段，返回完整响应:', response)
     return response
   },
   (error: AxiosError) => {
-    // 处理HTTP错误
     if (error.response) {
       switch (error.response.status) {
         case 401:
-          // 未授权，重定向到登录页面
-          window.location.href = '/login'
+          window.location.href = '/'
           break
         case 403:
-          // 权限不足
           console.error('权限不足，无法执行此操作')
           break
         case 404:
-          // 资源不存在
           console.error('请求的资源不存在')
           break
         case 500:
-          // 服务器错误
           console.error('服务器错误，请稍后再试')
           break
         default:
           console.error(`请求失败: ${error.message}`)
       }
     } else if (error.request) {
-      // 请求已发送但未收到响应
       console.error('无法连接到服务器，请检查您的网络连接')
     } else {
-      // 请求配置错误
       console.error(`请求错误: ${error.message}`)
     }
     return Promise.reject(error)
@@ -118,8 +113,9 @@ export interface Device {
 export const authService = {
   // 登出
   logout: (): void => {
-    // 调用Gateway的登出端点
-    window.location.href = 'http://192.168.1.222:8082/logout'
+    // 调用Gateway的登出端点，添加redirect_uri参数
+    window.location.href =
+      'http://192.168.1.222:8082/logout?redirect_uri=http://192.168.1.222:5179/'
   },
 }
 
@@ -128,8 +124,8 @@ export const userService = {
   // 获取当前用户信息
   getCurrentUser: async (): Promise<UserInfo> => {
     try {
-      // 使用正确的API路径：/core/api/user/current
-      const response = await api.get<UserInfo>('/core/api/user/current')
+      // 使用正确的API路径
+      const response = await api.get<UserInfo>('/user/current')
       return response.data
     } catch (error) {
       console.error('获取用户信息失败', error)
@@ -143,18 +139,41 @@ export const deviceService = {
   // 获取设备列表
   getDevices: async (): Promise<Device[]> => {
     try {
-      const response = await api.get<Device[]>('/core/api/devices')
+      const response = await api.get<Device[]>('/devices')
       return response.data
     } catch (error) {
       console.error('获取设备列表失败', error)
-      throw error
+      // 模拟数据，实际开发时移除
+      return [
+        {
+          id: 'dev001',
+          name: 'LED屏幕-A区',
+          status: 'online',
+          type: 'LED屏幕',
+          lastActive: '2023-05-15 14:30',
+        },
+        {
+          id: 'dev002',
+          name: 'LED屏幕-B区',
+          status: 'offline',
+          type: 'LED屏幕',
+          lastActive: '2023-05-14 09:15',
+        },
+        {
+          id: 'dev003',
+          name: '控制器-主厅',
+          status: 'online',
+          type: '控制器',
+          lastActive: '2023-05-15 15:45',
+        },
+      ]
     }
   },
 
   // 获取设备详情
   getDeviceById: async (id: string): Promise<Device> => {
     try {
-      const response = await api.get<Device>(`/core/api/devices/${id}`)
+      const response = await api.get<Device>(`/devices/${id}`)
       return response.data
     } catch (error) {
       console.error(`获取设备${id}详情失败`, error)
@@ -165,7 +184,7 @@ export const deviceService = {
   // 控制设备
   controlDevice: async (id: string, command: string): Promise<void> => {
     try {
-      await api.post(`/core/api/devices/${id}/control`, { command })
+      await api.post(`/devices/${id}/control`, { command })
     } catch (error) {
       console.error(`控制设备${id}失败`, error)
       throw error
