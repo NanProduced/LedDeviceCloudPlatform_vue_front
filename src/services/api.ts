@@ -20,7 +20,14 @@ console.log('API基础URL配置为:', api.defaults.baseURL)
 // 请求拦截器
 api.interceptors.request.use(
   (config) => {
-    console.log('发送请求:', config.method, config.url, config.data || config.params)
+    console.log('===== API请求开始 =====')
+    console.log('请求方法:', config.method?.toUpperCase())
+    console.log('请求URL:', config.url)
+    console.log('请求头:', JSON.stringify(config.headers))
+    console.log('请求参数:', config.params || '无')
+    console.log('请求体:', config.data ? JSON.stringify(config.data) : '无')
+    console.log('完整配置:', config)
+
     // 不再自动加/core/api前缀，直接返回config
     return config
   },

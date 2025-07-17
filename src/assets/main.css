@@ -13,3 +13,60 @@ a,
     background-color: hsla(160, 100%, 37%, 0.2);
   }
 }
+
+/* 自定义滚动条样式 */
+.custom-scrollbar {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #4b5563 #1f2937; /* Firefox */
+}
+
+/* Webkit浏览器的滚动条样式 */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #1f2937;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #4b5563;
+  border-radius: 4px;
+  border: 2px solid #1f2937;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #6b7280;
+}
+
+/* 添加自定义样式 */
+.permission-container {
+  max-height: 350px;
+  overflow-y: auto;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+/* 模态框动画效果 */
+.modal-enter-active,
+.modal-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+
+/* 按钮悬停效果增强 */
+button:not(:disabled):hover {
+  transform: translateY(-1px);
+  transition: transform 0.2s;
+}
+
+/* 输入框焦点效果增强 */
+input:focus {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+  outline: none;
+}
